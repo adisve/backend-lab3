@@ -14,11 +14,14 @@ app.get('/', (req, res) => {
 app.post('/', async (req, res) => {
     if (req.body.encrypt != '') {
         try {
-            
+            dbEncryption = await bcrypt.hash(req.body.encrypt, 18);
         } catch (err) {
-            
+            console.log(err)
         }
     }
+
+    req.method = 'GET'
+    req.redirect('/')
 });
 
 app.listen(port)
