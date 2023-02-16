@@ -1,0 +1,25 @@
+{
+  "name": "lab3-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/adisve/lab3-frontend.git"
+  },
+  "author": "Adis Veletanlic",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adisve/lab3-frontend/issues"
+  },
+  "homepage": "https://github.com/adisve/lab3-frontend#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2"
+  }
+}
