@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const crypto = require('crypto');
 const app = express();
 const appPort = 7036;
 const mongoosePort = 27017;
@@ -8,23 +9,22 @@ const host = 'localhost';
 const mongooseUrl = `mongodb://${host}:${mongoosePort}/mongoose?authSource=admin`;
 const { User } = require('./db/user_model');
 
-var bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(express.json());
-
+var JWTToken												
 
 /* View engine */
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', path.join(__dirname, 'views'));
+
+
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.json());
 
 mongoose.set('strictQuery', false);
 
 /* Initialize mongoose connection */
 const init = async() => {
     try {
-        console.log(path.join(__dirname))
         await mongoose.connect(mongooseUrl);
         app.listen(appPort, () => console.log(`Server listening on port ${appPort}`));
     } catch (err) {
@@ -37,23 +37,23 @@ init()
 
 /* GET */
 app.get('/', async (_, res) => {
-    res.redirect('/index')
-});
-
-app.get('/login', async (_, res) => {
-    res.render('login');
-});
-
-app.get('/register', async (_, res) => {
-    res.render('register')
-});
-
-app.get('/index', async (_, res) => {
     res.render('index');
 });
 
+app.get('/login', async (_, res) => {
+    res.render('partials/login');
+});
+
+app.get('/register', async (_, res) => {
+    res.render('partials/register')
+});
+
 app.get('/fail', async (_, res) => {
-    res.render('fail');
+    res.render('partials/fail');
+});
+
+app.get('/start', async (_, res) => {
+    res.render('partials/start');
 });
 
 /* POST */
@@ -64,7 +64,7 @@ app.post('/register', async (req, res) => {
         user.save()
             .then((_) => {
                 console.log("User created");
-                res.status(200).send('/fail');
+                res.status(200).send('/login');
             })
             .catch((err) => {
                 console.log(err);
@@ -82,22 +82,30 @@ app.post('/login', async (req, res) => {
         let data = await User.findOne({ username: inputUser.username });
         if (!data) {
             console.log("No user")
-            res.status(400);
+            res.status(400).send('/fail');
             return
         } else {
             let user = data;
             user.comparePassword(inputUser.password, (err, isMatch) => {
                 if (isMatch) {
+                    createToken(inputUser.password);
                     console.log(`User ${user.username} found`);
-                    res.status(200).redirect('/fail');
+                    res.status(200).send('/start');
                 } else {
                     console.log("Incorrect password");
-                    res.status(400);
+                    res.status(400).send('/fail');
                 }
             });
         }
     } catch (err) {
         console.log(err);
-        res.status(405);
+        res.status(405).send('/fail');
     }
 });
+
+function createToken(salt) {
+    const hmac = crypto.createHmac('sha256', salt);
+    const data = hmac.update('lab3');
+    JWTToken = data.digest('hex');
+    console.log("HMAC JWT : " + JWTToken);
+}

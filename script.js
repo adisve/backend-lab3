@@ -1,36 +1,56 @@
-const registerButton = document.getElementById('register-btn');
-const loginButton = document.getElementById('login-btn');
-const registerAccount = document.getElementById('register-account');
 const content = document.getElementById('dynamic-content');
+addListenerForLoginButton();
+addListenerForRegisterAccountButton();
+addListenerForRegisterButton();
 
-if (registerButton) {
-	registerButton.addEventListener('click', (event) => {
-    event.preventDefault()
-		console.log("Pressed register button")
-		handleFormSubmission('/register')
+const LOGIN = 'login';
+const REGISTER = 'register';
+
+const observer = new MutationObserver(function(mutationsList, observer) {
+  for (let mutation of mutationsList) {
+    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+			addListenerForLoginButton()
+			addListenerForRegisterAccountButton()
+			addListenerForRegisterButton()
+    }
+  }
 });
+
+observer.observe(content, { childList: true });
+
+function addListenerForRegisterButton() {
+	if (document.getElementById('register-button')) {
+		document.getElementById('register-button').addEventListener('click', (event) => {
+			event.preventDefault()
+			handleFormSubmission('/register', REGISTER)
+		});
+	}
 }
 
-if (loginButton) {
-	loginButton.addEventListener('click', (event) => {
-		event.preventDefault();
-		handleFormSubmission('/login');
-	});
+function addListenerForLoginButton() {
+	if (document.getElementById('login-button')) {
+		document.getElementById('login-button').addEventListener('click', (event) => {
+			event.preventDefault();
+			handleFormSubmission('/login', LOGIN);
+		})
+	}
 }
 
-registerAccount.addEventListener('click', (event) => {
-	event.preventDefault();
-	loadPartialView('/register');
-})
+function addListenerForRegisterAccountButton() {
+	if (document.getElementById('register-account')) {
+		document.getElementById('register-account').addEventListener('click', (event) => {
+			event.preventDefault();
+			loadPartialView('/register');
+		})
+	}
+}
 
-function handleFormSubmission(url) {
-	const usernameInput = document.getElementById('username').value;
-	const passwordInput = document.getElementById('password').value;
+function handleFormSubmission(url, type) {
+	const usernameInput = document.getElementById(type == REGISTER ? 'register-username' : 'login-username').value;
+	const passwordInput = document.getElementById(type == REGISTER ? 'register-password' : 'login-password').value;
 	if (invalidForm(usernameInput, passwordInput)) {
 		return;
 	}
-	console.log(usernameInput);
-	console.log(passwordInput);
 	submit(usernameInput, passwordInput, url);
 }
 
