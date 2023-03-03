@@ -22,7 +22,7 @@ function addListenerForRegisterButton() {
 	if (document.getElementById('register-button')) {
 		document.getElementById('register-button').addEventListener('click', (event) => {
 			event.preventDefault()
-			handleFormSubmission('/register', REGISTER)
+			handleFormSubmission('/auth/register', REGISTER)
 		});
 	}
 }
@@ -31,7 +31,7 @@ function addListenerForLoginButton() {
 	if (document.getElementById('login-button')) {
 		document.getElementById('login-button').addEventListener('click', (event) => {
 			event.preventDefault();
-			handleFormSubmission('/login', LOGIN);
+			handleFormSubmission('/auth/login', LOGIN);
 		})
 	}
 }
@@ -40,7 +40,7 @@ function addListenerForRegisterAccountButton() {
 	if (document.getElementById('register-account')) {
 		document.getElementById('register-account').addEventListener('click', (event) => {
 			event.preventDefault();
-			loadPartialView('/register');
+			loadPartialView('/auth/register');
 		})
 	}
 }

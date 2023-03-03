@@ -1,20 +1,19 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const path = require('path');
-const crypto = require('crypto');
+require('dotenv').config();
+
 const app = express();
-const appPort = 7036;
-const mongoosePort = 27017;
-const host = 'localhost';
+const appPort = process.env.PORT || 8080;
+const mongoosePort = process.env.MONGODB_PORT || 27017;
+const host = process.env.HOST || 'localhost';
 const mongooseUrl = `mongodb://${host}:${mongoosePort}/mongoose?authSource=admin`;
 const { User } = require('./db/user_model');
-
-var JWTToken												
 
 /* View engine */
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
 
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')))
@@ -26,86 +25,81 @@ mongoose.set('strictQuery', false);
 const init = async() => {
     try {
         await mongoose.connect(mongooseUrl);
-        app.listen(appPort, () => console.log(`Server listening on port ${appPort}`));
+        app.listen(appPort, () => console.log(`Server listening on port ${appPort} at http://localhost:${appPort}/`));
     } catch (err) {
         console.log(err);
         process.exit(1);
     }
 };
 
-init()
+init();
 
-/* GET */
-app.get('/', async (_, res) => {
+/* Routes */
+const indexRoute = express.Router();
+const authRoute = express.Router();
+
+app.use('/', indexRoute);
+app.use('/auth', authRoute);
+
+indexRoute.get('/', async (_, res) => {
     res.render('index');
 });
 
-app.get('/login', async (_, res) => {
+authRoute.get('/login', async (_, res) => {
     res.render('partials/login');
 });
 
-app.get('/register', async (_, res) => {
+authRoute.get('/register', async (_, res) => {
     res.render('partials/register')
 });
 
-app.get('/fail', async (_, res) => {
+authRoute.get('/fail', async (_, res) => {
     res.render('partials/fail');
 });
 
-app.get('/start', async (_, res) => {
+authRoute.get('/start', async (_, res) => {
     res.render('partials/start');
 });
 
-/* POST */
-app.post('/register', async (req, res) => {
+authRoute.post('/register', async (req, res) => {
     const user = new User({...req.body});
-    const userExists = await User.findOne({ username: user.username });
-    if (!userExists) {
-        user.save()
-            .then((_) => {
-                console.log("User created");
-                res.status(200).send('/login');
-            })
-            .catch((err) => {
-                console.log(err);
-                res.status(400).send('/fail');
-            });
-    } else {
-        console.log("User could not be created");
-        res.status(400).send('/fail');
-    }
-});
-
-app.post('/login', async (req, res) => {
-    const inputUser = new User({...req.body});
     try {
-        let data = await User.findOne({ username: inputUser.username });
-        if (!data) {
-            console.log("No user")
-            res.status(400).send('/fail');
-            return
-        } else {
-            let user = data;
-            user.comparePassword(inputUser.password, (err, isMatch) => {
-                if (isMatch) {
-                    createToken(inputUser.password);
-                    console.log(`User ${user.username} found`);
-                    res.status(200).send('/start');
-                } else {
-                    console.log("Incorrect password");
-                    res.status(400).send('/fail');
-                }
-            });
+        const userExists = await User.findOne({ username: user.username });
+        if (userExists) {
+            console.log("User already exists");
+            res.status(400).send('/auth/fail');
+            return;
         }
+        await user.save();
+        console.log("User created");
+        res.status(200).send('/auth/login');
     } catch (err) {
         console.log(err);
-        res.status(405).send('/fail');
+        res.status(400).send('/auth/fail');
     }
 });
 
-function createToken(salt) {
-    const hmac = crypto.createHmac('sha256', salt);
-    const data = hmac.update('lab3');
-    JWTToken = data.digest('hex');
-    console.log("HMAC JWT : " + JWTToken);
-}
+authRoute.post('/login', async (req, res) => {
+  const inputUser = new User({...req.body});
+  try {
+    const user = await User.findOne({ username: inputUser.username });
+    if (!user) {
+      console.log("User not found");
+      res.status(400).send('/auth/fail');
+      return;
+    }
+    const isMatch = await user.comparePassword(inputUser.password);
+    if (!isMatch) {
+      console.log("Incorrect password");
+      res.status(400).send('/auth/fail');
+      return;
+    }
+    const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET);
+    console.log(`User ${user.username} found`);
+    res.cookie('jwt', token, { httpOnly: true, sameSite: 'none', secure: true });
+    res.status(200).send('/auth/start');
+  } catch (err) {
+    console.log(err);
+    res.status(400).send('/auth/fail');
+  }
+});
