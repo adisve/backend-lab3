@@ -6,16 +6,16 @@ This project is a simple login backend that allows users to create an account an
 
 The application has the following requirements:
 
-    There should be 4 REST routes.
-    The user table should contain a username and password.
-    The password should be encrypted when saved using bcrypt.
-    The / route should redirect to the /login route.
-    The /login route should check if the user exists and render the fail.ejs view if the user does not exist, and render the start.ejs view if the user exists.
-    The password should be compared using bcrypt.
-    A JWT token should be created and saved in a string and logged.
-    The /login route should render the login.ejs view.
-    The /register route should register the user and save the password encrypted with bcrypt. After the user is registered, the user should be redirected to the /login route.
-    The /register route should render the register.ejs file.
+- There should be 4 REST routes.
+- The user table should contain a username and password.
+- The password should be encrypted when saved using bcrypt.
+- The / route should redirect to the /login route.
+- The /login route should check if the user exists and render the fail.ejs view if the user does not exist, and render the start.ejs view if the user exists.
+- The password should be compared using bcrypt.
+- A JWT token should be created and saved in a string and logged.
+- The /login route should render the login.ejs view.
+- The /register route should register the user and save the password encrypted with bcrypt. After the user is registered, the user should be redirected to the /login route.
+- The /register route should render the register.ejs file.
 
 ## Getting Started
 
